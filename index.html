@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>SpendTok — Smart Expense Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: "Poppins", sans-serif;
+            background: radial-gradient(circle at top, #0f172a, #020617);
+            color: #e2e8f0;
+        }
+
+        header {
+            text-align: center;
+            padding: 25px;
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #0ea5e9, #38bdf8, #22d3ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .cards {
+            display: flex;
+            gap: 20px;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            flex: 1;
+            min-width: 220px;
+            background: #1e293b;
+            border-radius: 18px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.15);
+            transition: 0.3s ease;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+        }
+
+        .card h2 {
+            font-size: 18px;
+            color: #38bdf8;
+            margin: 0;
+        }
+
+        .card p {
+            font-size: 24px;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .input-card {
+            margin-top: 30px;
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 15px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            box-shadow: 0 0 20px rgba(14, 165, 233, 0.2);
+        }
+
+        input,
+        select,
+        button {
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+        }
+
+        input,
+        select {
+            background: #0f172a;
+            color: #e2e8f0;
+            border: 1px solid #334155;
+        }
+
+        button {
+            background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+            color: #0f172a;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: linear-gradient(90deg, #38bdf8, #22d3ee);
+        }
+
+        table {
+            width: 100%;
+            margin-top: 25px;
+            border-collapse: collapse;
+            background: #1e293b;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #334155;
+        }
+
+        th {
+            background: #0f172a;
+            color: #38bdf8;
+        }
+
+        tr:hover {
+            background: #334155;
+        }
+
+        .delete-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .delete-btn:hover {
+            background: #dc2626;
+        }
+
+        .charts {
+            margin-top: 40px;
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        canvas {
+            background: #1e293b;
+            border-radius: 15px;
+            padding: 20px;
+            max-width: 420px;
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.2);
+        }
+
+        .fab {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: radial-gradient(circle at top left, #38bdf8, #0ea5e9);
+            color: white;
+            font-size: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            animation: glow 2s infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 10px #38bdf8, 0 0 20px #0ea5e9;
+            }
+
+            to {
+                box-shadow: 0 0 20px #38bdf8, 0 0 40px #0ea5e9;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>💎 SpendTok — Smart Expense Dashboard</header>
+
+    <div class="container">
+        <div class="cards">
+            <div class="card">
+                <h2>Today</h2>
+                <p id="todayTotal">₹0</p>
+            </div>
+            <div class="card">
+                <h2>This Month</h2>
+                <p id="monthTotal">₹0</p>
+            </div>
+            <div class="card">
+                <h2>Top Category</h2>
+                <p id="topCategory">-</p>
+            </div>
+        </div>
+
+        <div class="input-card">
+            <input type="number" id="amount" placeholder="Amount (₹)">
+            <select id="category"></select>
+            <button id="addBtn">➕ Add</button>
+            <button id="voiceBtn">🎙️ Speak</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Timestamp</th>
+                    <th>Amount</th>
+                    <th>Category</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="expenseTable"></tbody>
+        </table>
+
+        <div class="charts">
+            <canvas id="pieChart"></canvas>
+            <canvas id="barChart"></canvas>
+        </div>
+    </div>
+
+    <div class="fab" id="voiceFab">🎙️</div>
+
+    <script>
+        async function loadCategories() {
+            const res = await fetch('/get_categories');
+            const cats = await res.json();
+            const sel = document.getElementById('category');
+            sel.innerHTML = '';
+            cats.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = "📌 " + c.charAt(0).toUpperCase() + c.slice(1);
+                sel.appendChild(opt);
+            });
+        }
+
+        async function loadExpenses() {
+            const res = await fetch('/get_expenses');
+            const expenses = await res.json();
+            const tbody = document.getElementById('expenseTable');
+            tbody.innerHTML = '';
+            let data = {}, today = 0, month = 0;
+            const now = new Date();
+            expenses.forEach(e => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+            <td>${e.id}</td>
+            <td>${e.timestamp}</td>
+            <td>₹${e.amount}</td>
+            <td>${e.category}</td>
+            <td><button class="delete-btn" onclick="deleteExpense(${e.id})">Delete</button></td>`;
+                tbody.appendChild(tr);
+
+                data[e.category] = (data[e.category] || 0) + e.amount;
+                const d = new Date(e.timestamp);
+                if (d.toDateString() === now.toDateString()) today += e.amount;
+                if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) month += e.amount;
+            });
+            document.getElementById("todayTotal").innerText = "₹" + today;
+            document.getElementById("monthTotal").innerText = "₹" + month;
+            const top = Object.entries(data).sort((a, b) => b[1] - a[1])[0];
+            document.getElementById("topCategory").innerText = top ? top[0] + " (₹" + top[1] + ")" : "-";
+            updateCharts(data);
+        }
+
+        async function addExpense(amount, category) {
+            await fetch('/add_expense', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount, category })
+            });
+            loadExpenses();
+        }
+
+        async function deleteExpense(id) {
+            if (confirm("Delete this expense?")) {
+                await fetch(`/delete_expense/${id}`, { method: 'DELETE' });
+                loadExpenses();
+            }
+        }
+
+        function voiceInput() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US'; recognition.start();
+            recognition.onresult = function (e) {
+                const text = e.results[0][0].transcript;
+                const parts = text.split(' ');
+                const amount = parseFloat(parts[0]);
+                const category = parts.slice(1).join(' ').toLowerCase() || 'other';
+                if (!isNaN(amount)) addExpense(amount, category);
+                else alert('Say amount first, then category (e.g. "200 travel")');
+            };
+        }
+
+        document.getElementById('addBtn').addEventListener('click', () => {
+            const amt = parseFloat(document.getElementById('amount').value);
+            const cat = document.getElementById('category').value;
+            if (amt) addExpense(amt, cat); else alert('Enter a valid amount');
+        });
+        document.getElementById('voiceBtn').addEventListener('click', voiceInput);
+        document.getElementById('voiceFab').addEventListener('click', voiceInput);
+
+        let pieChart, barChart;
+        function updateCharts(data) {
+            const ctx1 = document.getElementById('pieChart').getContext('2d');
+            const ctx2 = document.getElementById('barChart').getContext('2d');
+            const labels = Object.keys(data), values = Object.values(data);
+            const colors = [
+                "#38bdf8", "#34d399", "#f43f5e", "#f59e0b", "#a78bfa",
+                "#ec4899", "#f87171", "#84cc16", "#eab308", "#06b6d4", "#fb7185"
+            ];
+            if (pieChart) pieChart.destroy(); if (barChart) barChart.destroy();
+            pieChart = new Chart(ctx1, {
+                type: 'doughnut', data: { labels, datasets: [{ data: values, backgroundColor: colors.slice(0, labels.length) }] },
+                options: { plugins: { legend: { position: 'bottom', labels: { color: '#e2e8f0' } } } }
+            });
+            barChart = new Chart(ctx2, {
+                type: 'bar', data: { labels, datasets: [{ label: 'Expenses', data: values, backgroundColor: colors.slice(0, labels.length) }] },
+                options: {
+                    scales: { x: { ticks: { color: "#e2e8f0" } }, y: { ticks: { color: "#e2e8f0" }, beginAtZero: true } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        loadCategories();
+        loadExpenses();
+    </script>
+</body>
+
+</html>
